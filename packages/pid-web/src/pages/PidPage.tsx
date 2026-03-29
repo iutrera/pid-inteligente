@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePidStore } from "@/stores/pidStore";
 import { useChatStore } from "@/stores/chatStore";
 import { GraphViewer } from "@/components/graph/GraphViewer";
@@ -7,27 +8,26 @@ import { NodeDetail } from "@/components/graph/NodeDetail";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { PidViewer } from "@/components/pid/PidViewer";
 import { DrawioViewer } from "@/components/pid/DrawioViewer";
+import { updateDrawioAndRebuild } from "@/services/api-client";
 
 type LeftTab = "pid" | "graph";
 
 export function PidPage(): JSX.Element {
   const { pidId } = useParams<{ pidId: string }>();
-  const navigate = useNavigate();
-  const { pids, setActivePid } = usePidStore();
+  const queryClient = useQueryClient();
+  const { pids, setActivePid, addPid } = usePidStore();
   const clearMessages = useChatStore((s) => s.clearMessages);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [leftTab, setLeftTab] = useState<LeftTab>("pid");
+  const [saving, setSaving] = useState(false);
 
-  // Sync the active PID when navigating directly to this URL
   useEffect(() => {
     if (pidId) {
       const exists = pids.some((p) => p.pid_id === pidId);
       if (exists) {
         setActivePid(pidId);
       }
-      // Don't redirect if PID not in store — it may have been loaded via API
-      // The graph/drawio viewer will fetch directly from the API
     }
     return () => {
       clearMessages();
@@ -38,6 +38,26 @@ export function PidPage(): JSX.Element {
   const handleNodeSelect = useCallback((nodeId: string | null) => {
     setSelectedNodeId(nodeId);
   }, []);
+
+  /** Called when the user saves changes in the Draw.io editor. */
+  const handleDrawioSave = useCallback(
+    async (xml: string) => {
+      if (!pidId || saving) return;
+      setSaving(true);
+      try {
+        const stats = await updateDrawioAndRebuild(pidId, xml);
+        // Update the store with new stats
+        addPid({ ...stats, file_name: pidId });
+        // Invalidate graph queries so GraphViewer refreshes
+        await queryClient.invalidateQueries({ queryKey: ["graph", pidId] });
+      } catch (err) {
+        console.error("Failed to rebuild KG after edit:", err);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [pidId, saving, addPid, queryClient],
+  );
 
   if (!pidId) return <></>;
 
@@ -56,7 +76,7 @@ export function PidPage(): JSX.Element {
             }`}
             onClick={() => setLeftTab("pid")}
           >
-            P&amp;ID
+            P&amp;ID {saving && "(guardando...)"}
           </button>
           <button
             type="button"
@@ -74,7 +94,11 @@ export function PidPage(): JSX.Element {
         {/* Tab content */}
         <div className="flex-1 overflow-hidden">
           {leftTab === "pid" ? (
-            <DrawioViewer pidId={pidId} className="h-full w-full" />
+            <DrawioViewer
+              pidId={pidId}
+              className="h-full w-full"
+              onSave={handleDrawioSave}
+            />
           ) : (
             <GraphViewer pidId={pidId} onNodeSelect={handleNodeSelect} />
           )}

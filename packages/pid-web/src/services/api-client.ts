@@ -48,6 +48,18 @@ async function fileDownloadRequest(
 // Graph endpoints
 // ---------------------------------------------------------------------------
 
+/** Update the .drawio XML after editing and rebuild the Knowledge Graph. */
+export async function updateDrawioAndRebuild(
+  pidId: string,
+  xml: string,
+): Promise<PidStats> {
+  return jsonRequest<PidStats>(`/api/graph/${encodeURIComponent(pidId)}/drawio`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ xml }),
+  });
+}
+
 /** Upload a file and build the Knowledge Graph. */
 export async function uploadAndBuildGraph(file: File): Promise<PidStats> {
   const formData = new FormData();

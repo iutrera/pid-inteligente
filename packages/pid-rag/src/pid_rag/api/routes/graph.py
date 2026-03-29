@@ -54,6 +54,41 @@ def _apply_layout_to_xml(xml_str: str, pid_model: Any) -> str:
         if pos.height is not None:
             geo.set("height", str(int(pos.height)))
 
+    # Inject auto-connected signal line edges into the XML
+    existing_edge_ids = {obj.get("id") for obj in tree.iter("object")}
+    root_el = tree.find(".//root")
+    if root_el is not None:
+        for edge in pid_model.edges:
+            if edge.id in existing_edge_ids:
+                continue  # Already in XML
+            if not edge.source_id or not edge.target_id:
+                continue
+            attrs = edge.attributes or {}
+            if attrs.get("auto_connected") != "true":
+                continue  # Only inject auto-connected edges
+
+            obj = etree.SubElement(root_el, "object")
+            obj.set("id", edge.id)
+            obj.set("label", edge.label or "")
+            obj.set("dexpi_class", edge.dexpi_class or "SignalLine")
+            if edge.dexpi_component_class:
+                obj.set("dexpi_component_class", edge.dexpi_component_class)
+            for k, v in attrs.items():
+                if k != "auto_connected":
+                    obj.set(k, str(v))
+
+            cell = etree.SubElement(obj, "mxCell")
+            cell.set("style", edge.style or
+                      "strokeColor=#FF0000;strokeWidth=1.5;dashed=1;dashPattern=8 4;"
+                      "endArrow=block;endFill=1;")
+            cell.set("edge", "1")
+            cell.set("source", edge.source_id)
+            cell.set("target", edge.target_id)
+            cell.set("parent", "2")  # Instrumentation layer
+            geo = etree.SubElement(cell, "mxGeometry")
+            geo.set("relative", "1")
+            geo.set("as", "geometry")
+
     return etree.tostring(tree, pretty_print=True, xml_declaration=True,
                           encoding="UTF-8").decode("utf-8")
 
@@ -166,8 +201,10 @@ async def build_graph_endpoint(
         try:
             from pid_converter.parser.mxgraph_parser import parse_drawio
             from pid_converter.layout import layout_pid
+            from pid_converter.autoconnect import autoconnect_instruments
 
             pid_model = parse_drawio(content.decode("utf-8"))
+            autoconnect_instruments(pid_model)  # Connect orphan instruments
             layout_pid(pid_model)
             # Apply the computed coordinates back to the original XML
             laid_out_xml = _apply_layout_to_xml(content.decode("utf-8"), pid_model)
@@ -176,12 +213,15 @@ async def build_graph_endpoint(
             # Fallback: cache original XML if layout fails
             request.app.state.drawio_cache[effective_pid_id] = content.decode("utf-8")
 
-        # Write to temp file for graph builder (needs file path)
+        # Write the enriched XML (with auto-connected instruments) to temp file
         import tempfile, os
+        enriched_xml = request.app.state.drawio_cache.get(
+            effective_pid_id, content.decode("utf-8")
+        )
         with tempfile.NamedTemporaryFile(
-            suffix=".drawio", delete=False, mode="wb"
+            suffix=".drawio", delete=False, mode="w", encoding="utf-8"
         ) as tmp:
-            tmp.write(content)
+            tmp.write(enriched_xml)
             tmp_path = tmp.name
 
         try:
@@ -236,6 +276,83 @@ async def get_drawio_xml(request: Request, pid_id: str) -> dict:
     if not xml:
         raise HTTPException(status_code=404, detail=f"No .drawio XML cached for '{pid_id}'.")
     return {"pid_id": pid_id, "xml": xml}
+
+
+class UpdateDrawioRequest(BaseModel):
+    """Request body for updating the .drawio XML after editing."""
+    xml: str
+
+
+@router.put(
+    "/{pid_id}/drawio",
+    response_model=GraphBuildStats,
+    summary="Update the .drawio XML and rebuild the Knowledge Graph",
+)
+async def update_drawio_xml(
+    request: Request,
+    pid_id: str,
+    body: UpdateDrawioRequest,
+) -> GraphBuildStats:
+    """Called when the user saves changes in the Draw.io editor.
+
+    Updates the cached XML, rebuilds the Knowledge Graph from the new XML,
+    and returns updated stats.
+    """
+    if not body.xml.strip():
+        raise HTTPException(status_code=400, detail="Empty XML.")
+
+    try:
+        # Update cache
+        if not hasattr(request.app.state, "drawio_cache"):
+            request.app.state.drawio_cache = {}
+        request.app.state.drawio_cache[pid_id] = body.xml
+
+        # Rebuild KG from updated XML
+        import tempfile, os
+        with tempfile.NamedTemporaryFile(
+            suffix=".drawio", delete=False, mode="w", encoding="utf-8"
+        ) as tmp:
+            tmp.write(body.xml)
+            tmp_path = tmp.name
+
+        try:
+            detailed = build_graph(tmp_path, pid_id=pid_id)
+            enrich_labels(detailed)
+        finally:
+            os.unlink(tmp_path)
+
+        condensed = condense_graph(detailed)
+        enrich_labels(condensed)
+
+        neo4j_store = request.app.state.neo4j_store
+        # Delete old graph first, then reload
+        try:
+            await neo4j_store.delete_graph(pid_id)
+        except Exception:
+            pass
+        await neo4j_store.load_graph(pid_id, detailed)
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=422, detail=f"Rebuild failed: {exc}"
+        ) from exc
+
+    equipment_count = sum(
+        1 for _, d in detailed.nodes(data=True)
+        if d.get("node_type") == "Equipment"
+    )
+    instrument_count = sum(
+        1 for _, d in detailed.nodes(data=True)
+        if d.get("node_type") == "Instrument"
+    )
+
+    return GraphBuildStats(
+        pid_id=pid_id,
+        node_count=detailed.number_of_nodes(),
+        edge_count=detailed.number_of_edges(),
+        equipment_count=equipment_count,
+        instrument_count=instrument_count,
+    )
 
 
 @router.get(
