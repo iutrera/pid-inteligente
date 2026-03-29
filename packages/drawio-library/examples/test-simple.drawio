@@ -8,124 +8,148 @@
         <mxCell id="2" value="Instrumentation" parent="0"/>
         <mxCell id="3" value="Annotations" parent="0"/>
 
-        <!-- Tank T-101 -->
+        <!-- ============================================= -->
+        <!-- PROCESS LAYER - Horizontal flow left to right -->
+        <!-- ============================================= -->
+
+        <!-- Tank T-101 (left side) -->
         <object label="T-101" dexpi_class="VerticalVessel" dexpi_component_class="VTVS" tag_number="T-101" design_pressure="5 barg" design_temperature="80 degC" capacity="10 m3" material="SS316L" id="10">
-          <mxCell style="shape=rectangle;whiteSpace=wrap;rounded=1;arcSize=50;" vertex="1" parent="1">
-            <mxGeometry x="100" y="200" width="80" height="150" as="geometry"/>
+          <mxCell style="shape=rectangle;whiteSpace=wrap;rounded=1;arcSize=50;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="120" y="350" width="100" height="200" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Nozzle N1 on T-101 bottom -->
+        <!-- Nozzle N1 on T-101 (right side outlet) -->
         <object label="N1" dexpi_class="Nozzle" dexpi_component_class="NOZL" nozzle_id="N1" size="3 inch" rating="150#" service="Outlet" id="11">
-          <mxCell style="shape=ellipse;fillColor=#000000;" vertex="1" parent="1">
-            <mxGeometry x="133" y="345" width="14" height="14" as="geometry"/>
+          <mxCell style="shape=ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+            <mxGeometry x="213" y="443" width="14" height="14" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Pump P-101 -->
         <object label="P-101" dexpi_class="CentrifugalPump" dexpi_component_class="CHBP" tag_number="P-101" design_pressure="10 barg" design_temperature="80 degC" capacity="50 m3/h" power="15 kW" material="SS316L" id="30">
-          <mxCell style="shape=ellipse;whiteSpace=wrap;" vertex="1" parent="1">
-            <mxGeometry x="110" y="440" width="60" height="60" as="geometry"/>
+          <mxCell style="shape=ellipse;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="370" y="415" width="80" height="80" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Control Valve TCV-101 -->
         <object label="TCV-101" dexpi_class="ControlValve" dexpi_component_class="CTLV" tag_number="TCV-101" size="3 inch" rating="150#" valve_type="Control" id="50">
-          <mxCell style="shape=rhombus;whiteSpace=wrap;" vertex="1" parent="1">
-            <mxGeometry x="350" y="450" width="40" height="40" as="geometry"/>
+          <mxCell style="shape=rhombus;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="640" y="425" width="60" height="60" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Heat Exchanger HE-101 -->
+        <!-- Heat Exchanger HE-101 (right side) -->
         <object label="HE-101" dexpi_class="ShellTubeHeatExchanger" dexpi_component_class="SHTL" tag_number="HE-101" design_pressure="10 barg" design_temperature="150 degC" capacity="" power="" material="CS" id="70">
-          <mxCell style="shape=rectangle;whiteSpace=wrap;" vertex="1" parent="1">
-            <mxGeometry x="500" y="430" width="100" height="80" as="geometry"/>
+          <mxCell style="shape=rectangle;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=2;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+            <mxGeometry x="900" y="390" width="140" height="120" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Nozzle S1 on HE-101 shell inlet -->
+        <!-- Nozzle S1 on HE-101 (left side shell inlet) -->
         <object label="S1" dexpi_class="Nozzle" dexpi_component_class="NOZL" nozzle_id="S1" size="3 inch" rating="150#" service="Shell inlet" id="72">
-          <mxCell style="shape=ellipse;fillColor=#000000;" vertex="1" parent="1">
-            <mxGeometry x="493" y="463" width="14" height="14" as="geometry"/>
+          <mxCell style="shape=ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+            <mxGeometry x="893" y="443" width="14" height="14" as="geometry"/>
           </mxCell>
         </object>
+
+        <!-- ============================================= -->
+        <!-- PROCESS LINES - Horizontal connections        -->
+        <!-- ============================================= -->
 
         <!-- Process Line: T-101 N1 → P-101 -->
         <object label="3&quot;-PL-101" dexpi_class="ProcessLine" dexpi_component_class="PRCL" line_number="PL-101" nominal_diameter="3 inch" fluid_code="PROCESS" material_spec="SS316L" id="101">
-          <mxCell style="endArrow=block;strokeWidth=3;endFill=1;" edge="1" source="11" target="30" parent="1">
+          <mxCell style="endArrow=block;strokeColor=#000000;strokeWidth=3;endFill=1;endSize=8;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" source="11" target="30" parent="1">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Process Line: P-101 → TCV-101 -->
         <object label="3&quot;-PL-102" dexpi_class="ProcessLine" dexpi_component_class="PRCL" line_number="PL-102" nominal_diameter="3 inch" fluid_code="PROCESS" material_spec="SS316L" id="102">
-          <mxCell style="endArrow=block;strokeWidth=3;endFill=1;" edge="1" source="30" target="50" parent="1">
+          <mxCell style="endArrow=block;strokeColor=#000000;strokeWidth=3;endFill=1;endSize=8;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" source="30" target="50" parent="1">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Process Line: TCV-101 → HE-101 S1 -->
         <object label="3&quot;-PL-103" dexpi_class="ProcessLine" dexpi_component_class="PRCL" line_number="PL-103" nominal_diameter="3 inch" fluid_code="PROCESS" material_spec="SS316L" id="103">
-          <mxCell style="endArrow=block;strokeWidth=3;endFill=1;" edge="1" source="50" target="72" parent="1">
+          <mxCell style="endArrow=block;strokeColor=#000000;strokeWidth=3;endFill=1;endSize=8;fontSize=9;labelPosition=center;verticalLabelPosition=top;align=center;verticalAlign=bottom;" edge="1" source="50" target="72" parent="1">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Temperature Transmitter TT-101 -->
+        <!-- ============================================= -->
+        <!-- INSTRUMENTATION LAYER - Above process line    -->
+        <!-- ============================================= -->
+
+        <!-- Temperature Transmitter TT-101 (near HE-101 outlet) -->
         <object label="TT-101" dexpi_class="TemperatureTransmitter" dexpi_component_class="TT" tag_number="TT-101" measured_variable="Temperature" function="Transmitter" signal_type="4-20mA" id="200">
-          <mxCell style="shape=ellipse;whiteSpace=wrap;" vertex="1" parent="2">
-            <mxGeometry x="550" y="350" width="40" height="40" as="geometry"/>
+          <mxCell style="shape=ellipse;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontStyle=1;" vertex="1" parent="2">
+            <mxGeometry x="950" y="250" width="50" height="50" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Temperature Controller TIC-101 -->
+        <!-- Temperature Controller TIC-101 (centered above process) -->
         <object label="TIC-101" dexpi_class="TemperatureController" dexpi_component_class="TIC" tag_number="TIC-101" measured_variable="Temperature" function="Indicating Controller" signal_type="4-20mA" id="220">
-          <mxCell style="shape=ellipse;whiteSpace=wrap;" vertex="1" parent="2">
-            <mxGeometry x="400" y="320" width="40" height="40" as="geometry"/>
+          <mxCell style="shape=ellipse;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontStyle=1;" vertex="1" parent="2">
+            <mxGeometry x="645" y="220" width="50" height="50" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Level Indicator LI-101 -->
+        <!-- Level Indicator LI-101 (next to T-101) -->
         <object label="LI-101" dexpi_class="LevelIndicator" dexpi_component_class="LI" tag_number="LI-101" measured_variable="Level" function="Indicator" id="240">
-          <mxCell style="shape=ellipse;whiteSpace=wrap;" vertex="1" parent="2">
-            <mxGeometry x="50" y="250" width="40" height="40" as="geometry"/>
+          <mxCell style="shape=ellipse;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontStyle=1;" vertex="1" parent="2">
+            <mxGeometry x="50" y="420" width="50" height="50" as="geometry"/>
           </mxCell>
         </object>
 
-        <!-- Pressure Indicator PI-101 -->
+        <!-- Pressure Indicator PI-101 (below P-101) -->
         <object label="PI-101" dexpi_class="PressureIndicator" dexpi_component_class="PI" tag_number="PI-101" measured_variable="Pressure" function="Indicator" id="250">
-          <mxCell style="shape=ellipse;whiteSpace=wrap;" vertex="1" parent="2">
-            <mxGeometry x="200" y="520" width="40" height="40" as="geometry"/>
+          <mxCell style="shape=ellipse;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1.5;fontSize=10;fontStyle=1;" vertex="1" parent="2">
+            <mxGeometry x="380" y="570" width="50" height="50" as="geometry"/>
           </mxCell>
         </object>
+
+        <!-- ============================================= -->
+        <!-- SIGNAL LINES - Dashed, from instruments       -->
+        <!-- ============================================= -->
 
         <!-- Signal: TT-101 → TIC-101 -->
         <object label="" dexpi_class="SignalLine" signal_type="4-20mA" instrument_tag="TT-101" id="301">
-          <mxCell style="strokeColor=#FF0000;strokeWidth=1;dashed=1;endArrow=block;endFill=1;" edge="1" source="200" target="220" parent="2">
+          <mxCell style="strokeColor=#FF0000;strokeWidth=1.5;dashed=1;dashPattern=8 4;endArrow=block;endFill=1;endSize=6;" edge="1" source="200" target="220" parent="2">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Signal: TIC-101 → TCV-101 -->
         <object label="" dexpi_class="SignalLine" signal_type="4-20mA" instrument_tag="TIC-101" id="302">
-          <mxCell style="strokeColor=#FF0000;strokeWidth=1;dashed=1;endArrow=block;endFill=1;" edge="1" source="220" target="50" parent="2">
+          <mxCell style="strokeColor=#FF0000;strokeWidth=1.5;dashed=1;dashPattern=8 4;endArrow=block;endFill=1;endSize=6;" edge="1" source="220" target="50" parent="2">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Signal: LI-101 → T-101 -->
         <object label="" dexpi_class="SignalLine" signal_type="4-20mA" instrument_tag="LI-101" id="303">
-          <mxCell style="strokeColor=#FF0000;strokeWidth=1;dashed=1;" edge="1" source="240" target="10" parent="2">
+          <mxCell style="strokeColor=#FF0000;strokeWidth=1.5;dashed=1;dashPattern=8 4;" edge="1" source="240" target="10" parent="2">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
 
         <!-- Signal: PI-101 → P-101 -->
         <object label="" dexpi_class="SignalLine" signal_type="4-20mA" instrument_tag="PI-101" id="304">
-          <mxCell style="strokeColor=#FF0000;strokeWidth=1;dashed=1;" edge="1" source="250" target="30" parent="2">
+          <mxCell style="strokeColor=#FF0000;strokeWidth=1.5;dashed=1;dashPattern=8 4;" edge="1" source="250" target="30" parent="2">
             <mxGeometry relative="1" as="geometry"/>
           </mxCell>
         </object>
+
+        <!-- ============================================= -->
+        <!-- ANNOTATIONS LAYER                             -->
+        <!-- ============================================= -->
+
+        <mxCell id="400" value="P&amp;ID - Heat Exchange Loop Example&#xa;T-101 → P-101 → TCV-101 → HE-101&#xa;Temperature Control Loop: TT-101 → TIC-101 → TCV-101" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#333333;" vertex="1" parent="3">
+          <mxGeometry x="120" y="700" width="500" height="60" as="geometry"/>
+        </mxCell>
 
       </root>
     </mxGraphModel>

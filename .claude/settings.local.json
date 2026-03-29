@@ -44,7 +44,20 @@
       "Bash(curl -s \"http://localhost:3000/node_modules/.vite/deps/react-cytoscapejs.js?v=ed9726ff\")",
       "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install httpx)",
       "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest e2e/tests/ -v --tb=short -k \"not api\")",
-      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest e2e/tests/test_api_integration.py -v --tb=short)"
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest e2e/tests/test_api_integration.py -v --tb=short)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo:*)",
+      "Bash(/dev/null cp:*)",
+      "Bash(1 cp:*)",
+      "Read(//c/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/%APPDATA%/Claude/**)",
+      "Read(//c/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/$APPDATA/Claude/**)",
+      "Bash(wc -l \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/pid-library.xml\")",
+      "Bash(tail -c 100 \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/pid-library.xml\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/fix_ids.py\" \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/pid-library.xml\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/verify_ids.py\" \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/pid-library.xml\")",
+      "Bash(curl -s -X POST http://localhost:8000/api/graph/build -F \"file=@c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/examples/test-simple.drawio\" -F \"pid_id=layout-test\")",
+      "Bash(rm -rf /tmp/pid-mcp-build 2)",
+      "Bash(/dev/null mkdir:*)"
     ]
   },
   "hooks": {

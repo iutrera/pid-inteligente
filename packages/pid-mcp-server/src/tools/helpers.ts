@@ -57,7 +57,7 @@ export function buildFormData(
   fileName: string,
 ): FormData {
   const formData = new FormData();
-  const blob = new Blob([fileContent]);
+  const blob = new Blob([new Uint8Array(fileContent)]);
   formData.append(fieldName, blob, fileName);
   return formData;
 }
@@ -73,7 +73,7 @@ export function buildFormDataWithField(
   textFieldValue: string,
 ): FormData {
   const formData = new FormData();
-  const blob = new Blob([fileContent]);
+  const blob = new Blob([new Uint8Array(fileContent)]);
   formData.append(fileFieldName, blob, fileName);
   formData.append(textFieldName, textFieldValue);
   return formData;

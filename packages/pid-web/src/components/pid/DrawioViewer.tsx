@@ -1,23 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface DrawioViewerProps {
   pidId: string;
   className?: string;
+  /** Called when the user saves changes in the Draw.io editor */
+  onSave?: (xml: string) => void;
 }
 
 /**
- * Renders a Draw.io P&ID diagram using the official diagrams.net viewer.
- * Fetches the .drawio XML from the API and renders via iframe + viewer-static.min.js.
+ * Embeds the full Draw.io editor (not just the viewer) so the user can
+ * edit the P&ID directly: add equipment, instruments, connections, etc.
+ *
+ * Uses the diagrams.net embed mode via postMessage protocol:
+ * https://www.drawio.com/doc/faq/embed-mode
+ *
+ * Flow:
+ * 1. iframe loads draw.io in embed mode
+ * 2. draw.io sends "init" → we reply with "load" + XML
+ * 3. User edits the diagram
+ * 4. User clicks Save → draw.io sends "save" with updated XML
+ * 5. We call onSave() with the new XML to rebuild the KG
  */
-export function DrawioViewer({ pidId, className = "" }: DrawioViewerProps): JSX.Element {
-  const [xmlContent, setXmlContent] = useState<string | null>(null);
+export function DrawioViewer({ pidId, className = "", onSave }: DrawioViewerProps): JSX.Element {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const xmlRef = useRef<string | null>(null);
+  const initializedRef = useRef(false);
 
+  // Fetch the .drawio XML from the API
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    initializedRef.current = false;
 
     fetch(`/api/graph/${encodeURIComponent(pidId)}/drawio`)
       .then((res) => {
@@ -26,7 +42,7 @@ export function DrawioViewer({ pidId, className = "" }: DrawioViewerProps): JSX.
       })
       .then((data) => {
         if (!cancelled) {
-          setXmlContent(data.xml);
+          xmlRef.current = data.xml;
           setLoading(false);
         }
       })
@@ -40,40 +56,61 @@ export function DrawioViewer({ pidId, className = "" }: DrawioViewerProps): JSX.
     return () => { cancelled = true; };
   }, [pidId]);
 
-  const iframeSrcDoc = useMemo(() => {
-    if (!xmlContent) return null;
+  // Handle messages from the Draw.io iframe
+  const handleMessage = useCallback((evt: MessageEvent) => {
+    if (!iframeRef.current) return;
 
-    // Use JSON.stringify to safely escape the XML for embedding in JS
-    const jsonSafeXml = JSON.stringify(xmlContent);
+    let msg: { event?: string; xml?: string; exit?: boolean };
+    try {
+      msg = typeof evt.data === "string" ? JSON.parse(evt.data) : evt.data;
+    } catch {
+      return; // Not a JSON message
+    }
 
-    // Build the config as a JS object in a script tag to avoid HTML attribute escaping issues
-    return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8"/>
-  <style>
-    body { margin: 0; padding: 0; overflow: auto; background: #fafafa; }
-    #graph-container { width: 100%; min-height: 100vh; }
-  </style>
-</head>
-<body>
-  <div id="graph-container" class="mxgraph"></div>
-  <script>
-    // Set the config via JS to avoid JSON-in-HTML-attribute escaping issues
-    var container = document.getElementById('graph-container');
-    var config = {
-      highlight: '#0000ff',
-      nav: true,
-      resize: true,
-      toolbar: 'zoom layers lightbox',
-      xml: ${jsonSafeXml}
-    };
-    container.setAttribute('data-mxgraph', JSON.stringify(config));
-  <\/script>
-  <script src="https://viewer.diagrams.net/js/viewer-static.min.js"><\/script>
-</body>
-</html>`;
-  }, [xmlContent]);
+    const iframe = iframeRef.current;
+
+    switch (msg.event) {
+      case "init":
+        // Editor is ready — send the XML to load
+        if (xmlRef.current && !initializedRef.current) {
+          initializedRef.current = true;
+          iframe.contentWindow?.postMessage(
+            JSON.stringify({
+              action: "load",
+              autosave: 0,
+              xml: xmlRef.current,
+            }),
+            "*",
+          );
+        }
+        break;
+
+      case "save":
+        // User clicked save — capture the updated XML
+        if (msg.xml) {
+          xmlRef.current = msg.xml;
+          onSave?.(msg.xml);
+          // Acknowledge the save so draw.io shows "saved" status
+          iframe.contentWindow?.postMessage(
+            JSON.stringify({ action: "status", message: "Guardado", modified: false }),
+            "*",
+          );
+        }
+        break;
+
+      case "exit":
+        // User clicked exit/close — we don't close, just ignore
+        break;
+
+      default:
+        break;
+    }
+  }, [onSave]);
+
+  useEffect(() => {
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [handleMessage]);
 
   if (loading) {
     return (
@@ -97,7 +134,7 @@ export function DrawioViewer({ pidId, className = "" }: DrawioViewerProps): JSX.
     );
   }
 
-  if (!iframeSrcDoc) {
+  if (!xmlRef.current) {
     return (
       <div className={`flex items-center justify-center bg-gray-50 ${className}`}>
         <p className="text-sm text-gray-400">No hay P&amp;ID cargado</p>
@@ -105,13 +142,26 @@ export function DrawioViewer({ pidId, className = "" }: DrawioViewerProps): JSX.
     );
   }
 
+  // Draw.io embed URL with editor mode enabled
+  const editorUrl = [
+    "https://embed.diagrams.net/?",
+    "embed=1",         // Embed mode (postMessage API)
+    "&proto=json",     // Use JSON protocol
+    "&spin=1",         // Show spinner while loading
+    "&libraries=1",    // Show shape libraries sidebar
+    "&saveAndExit=0",  // Hide "Save & Exit" (we handle save ourselves)
+    "&noExitBtn=1",    // Hide exit button
+    "&noSaveBtn=0",    // Show save button
+    "&modified=unsavedChanges", // Track unsaved changes
+  ].join("");
+
   return (
     <div className={`relative ${className}`}>
       <iframe
-        srcDoc={iframeSrcDoc}
+        ref={iframeRef}
+        src={editorUrl}
         className="h-full w-full border-0"
-        sandbox="allow-scripts allow-same-origin"
-        title="P&amp;ID Diagram"
+        title="P&amp;ID Editor"
       />
     </div>
   );

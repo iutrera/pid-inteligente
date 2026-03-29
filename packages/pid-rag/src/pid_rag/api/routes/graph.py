@@ -7,9 +7,55 @@ from typing import Any
 from fastapi import APIRouter, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
+from lxml import etree
+
 from pid_knowledge_graph import build_graph, condense_graph, enrich_labels
 
 router = APIRouter(prefix="/api/graph", tags=["graph"])
+
+
+def _apply_layout_to_xml(xml_str: str, pid_model: Any) -> str:
+    """Update coordinates in the .drawio XML from a laid-out PidModel.
+
+    Walks the XML tree and for each <object> whose id matches a node in
+    the model, updates the <mxGeometry> x/y/width/height to the computed
+    layout values.
+    """
+    tree = etree.fromstring(xml_str.encode())  # noqa: S320
+    node_map = {n.id: n for n in pid_model.nodes}
+
+    for obj in tree.iter("object"):
+        oid = obj.get("id", "")
+        node = node_map.get(oid)
+        if not node or not node.position:
+            continue
+
+        pos = node.position
+        if pos.x is None and pos.y is None:
+            continue
+
+        cell = obj.find("mxCell")
+        if cell is None:
+            continue
+        geo = cell.find("mxGeometry")
+        if geo is None:
+            continue
+
+        # Only update vertex geometry (not edges)
+        if cell.get("edge") == "1":
+            continue
+
+        if pos.x is not None:
+            geo.set("x", str(int(pos.x)))
+        if pos.y is not None:
+            geo.set("y", str(int(pos.y)))
+        if pos.width is not None:
+            geo.set("width", str(int(pos.width)))
+        if pos.height is not None:
+            geo.set("height", str(int(pos.height)))
+
+    return etree.tostring(tree, pretty_print=True, xml_declaration=True,
+                          encoding="UTF-8").decode("utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -113,10 +159,22 @@ async def build_graph_endpoint(
     effective_pid_id = pid_id or file.filename.rsplit(".", 1)[0]
 
     try:
-        # Cache raw XML for the /api/graph/{pid_id}/drawio viewer endpoint
+        # Apply auto-layout to the P&ID for better visualization
         if not hasattr(request.app.state, "drawio_cache"):
             request.app.state.drawio_cache = {}
-        request.app.state.drawio_cache[effective_pid_id] = content.decode("utf-8")
+
+        try:
+            from pid_converter.parser.mxgraph_parser import parse_drawio
+            from pid_converter.layout import layout_pid
+
+            pid_model = parse_drawio(content.decode("utf-8"))
+            layout_pid(pid_model)
+            # Apply the computed coordinates back to the original XML
+            laid_out_xml = _apply_layout_to_xml(content.decode("utf-8"), pid_model)
+            request.app.state.drawio_cache[effective_pid_id] = laid_out_xml
+        except Exception:
+            # Fallback: cache original XML if layout fails
+            request.app.state.drawio_cache[effective_pid_id] = content.decode("utf-8")
 
         # Write to temp file for graph builder (needs file path)
         import tempfile, os

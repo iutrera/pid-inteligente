@@ -79,7 +79,7 @@ export function registerGraphTools(server: McpServer): void {
         );
       } else {
         const fd = new FormData();
-        fd.append("file", new Blob([fileContent]), fileName);
+        fd.append("file", new Blob([new Uint8Array(fileContent)]), fileName);
         formData = fd;
       }
 

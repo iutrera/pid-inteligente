@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerConvertTools } from "./tools/convert.js";
 import { registerGraphTools } from "./tools/graph.js";
 import { registerValidateTools } from "./tools/validate.js";
+import { registerPrompts } from "./prompts/pid-from-pdf.js";
 import { getApiBaseUrl, log } from "./tools/helpers.js";
 
 /**
@@ -27,6 +28,7 @@ async function main(): Promise<void> {
   registerConvertTools(server);
   registerGraphTools(server);
   registerValidateTools(server);
+  registerPrompts(server);
 
   // Connect via stdio transport (standard MCP communication channel)
   const transport = new StdioServerTransport();
