@@ -1,0 +1,74 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(pip index:*)",
+      "Bash(pip search:*)",
+      "Read(//c/Users/iutre/AppData/Local/Programs/Python/**)",
+      "Bash(ls /c/Python*/python.exe)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -c \"import struct; print\\(f''Python {__import__\\(\"\"sys\"\"\\).version} — {struct.calcsize\\(\"\"P\"\"\\)*8}-bit''\\)\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install pydexpi)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -c \":*)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install -e \"packages/pid-converter[dev]\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install -e \"packages/pid-knowledge-graph[dev]\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest packages/pid-converter/tests/ -v --tb=short)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest packages/pid-knowledge-graph/tests/ -v --tb=short)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cmd //c \"cd /d \"\"c:\\\\Users\\\\iutre\\\\REPOSITORIOS\\\\P&ID INTELIGENTE\\\\packages\\\\pid-mcp-server\"\" && npx tsc --version\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install -e \"packages/pid-rag[dev]\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest packages/pid-rag/tests/ -v --tb=short)",
+      "Bash(npx vitest:*)",
+      "Bash(docker --version)",
+      "Bash(ls \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/.env\")",
+      "Bash(\"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/.env\":*)",
+      "Bash(docker run:*)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install uvicorn[standard])",
+      "Bash(rm -rf /tmp/pid-web-dev)",
+      "Bash(cp -r \"c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/pid-web\" /tmp/pid-web-dev)",
+      "Bash(curl -s -X POST http://localhost:8000/api/graph/build -F \"file=@c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/examples/example-pid.drawio\" -F \"pid_id=example-pid\")",
+      "Bash(curl -s http://localhost:8000/api/graph/example-pid)",
+      "Bash(curl -s -X POST http://localhost:8000/api/graph/build -F \"file=@c:/Users/iutre/REPOSITORIOS/P&ID INTELIGENTE/packages/drawio-library/examples/test-simple.drawio\" -F \"pid_id=test-simple\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //F //PID 39468)",
+      "Bash(curl -s http://localhost:8000/api/graph/test-simple)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m json.tool)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s http://localhost:3000/src/main.tsx)",
+      "Bash(curl -s http://localhost:3000/src/App.tsx)",
+      "Bash(curl -s \"http://localhost:3000/src/pages/PidPage.tsx\")",
+      "Bash(curl -s \"http://localhost:3000/node_modules/.vite/deps/react-cytoscapejs.js?v=ed9726ff\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pip install httpx)",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest e2e/tests/ -v --tb=short -k \"not api\")",
+      "Bash(/c/Users/iutre/AppData/Local/Programs/Python/Python313/python.exe -m pytest e2e/tests/test_api_integration.py -v --tb=short)"
+    ]
+  },
+  "hooks": {
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/verify-task.sh",
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-remaining.sh",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

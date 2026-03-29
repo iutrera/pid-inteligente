@@ -1,0 +1,61 @@
+# =============================================================================
+# P&ID Inteligente — API (FastAPI + Graph-RAG)
+# Multi-stage build: builder installs deps, runtime copies only what's needed.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1: Builder — install Python packages
+# ---------------------------------------------------------------------------
+FROM python:3.13-slim AS builder
+
+WORKDIR /app
+
+# Install build toolchain needed by some C-extension wheels (lxml, etc.)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libxml2-dev libxslt1-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy only the files pip needs so layer cache is effective
+COPY packages/pid-converter/pyproject.toml   packages/pid-converter/pyproject.toml
+COPY packages/pid-converter/src/             packages/pid-converter/src/
+COPY packages/pid-knowledge-graph/pyproject.toml packages/pid-knowledge-graph/pyproject.toml
+COPY packages/pid-knowledge-graph/src/       packages/pid-knowledge-graph/src/
+COPY packages/pid-rag/pyproject.toml         packages/pid-rag/pyproject.toml
+COPY packages/pid-rag/src/                   packages/pid-rag/src/
+
+# Install production dependencies only (no [dev] extras)
+RUN pip install --no-cache-dir \
+    packages/pid-converter/ \
+    packages/pid-knowledge-graph/ \
+    packages/pid-rag/
+
+# ---------------------------------------------------------------------------
+# Stage 2: Runtime — lean image with only what we need
+# ---------------------------------------------------------------------------
+FROM python:3.13-slim
+
+WORKDIR /app
+
+# Runtime libraries required by lxml
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libxml2 libxslt1.1 curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy installed site-packages and executables from builder
+COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
+COPY --from=builder /usr/local/bin/ /usr/local/bin/
+
+# Copy application source for runtime
+COPY packages/pid-rag/src/ src/
+
+# Non-root user for security
+RUN groupadd --gid 1000 appuser && \
+    useradd --uid 1000 --gid appuser --create-home appuser
+USER appuser
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health || exit 1
+
+CMD ["uvicorn", "pid_rag.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

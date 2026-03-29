@@ -1,0 +1,53 @@
+# Development overrides — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      target: builder
+    command:
+      - python
+      - -m
+      - uvicorn
+      - pid_rag.api.app:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --reload
+      - --reload-dir=/app/packages/pid-converter/src
+      - --reload-dir=/app/packages/pid-knowledge-graph/src
+      - --reload-dir=/app/packages/pid-rag/src
+    volumes:
+      - ./packages/pid-converter/src:/app/packages/pid-converter/src
+      - ./packages/pid-knowledge-graph/src:/app/packages/pid-knowledge-graph/src
+      - ./packages/pid-rag/src:/app/packages/pid-rag/src
+    ports:
+      - "8000:8000"
+      - "5678:5678"  # debugpy
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+    # Override healthcheck for faster dev feedback
+    healthcheck:
+      interval: 5s
+      start_period: 5s
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      target: builder
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+    volumes:
+      - ./packages/pid-web/src:/app/src
+      - ./packages/pid-web/public:/app/public
+      - ./packages/pid-web/index.html:/app/index.html
+    ports:
+      - "3000:3000"
+    # No healthcheck needed in dev — Vite serves immediately
+    healthcheck:
+      disable: true
+
+  mcp:
+    command: ["npx", "tsx", "watch", "src/index.ts"]
+    volumes:
+      - ./packages/pid-mcp-server/src:/app/src

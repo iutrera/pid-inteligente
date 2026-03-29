@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+.env
+*.egg
+
+# TypeScript / Node
+node_modules/
+dist/
+.next/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.coverage
+htmlcov/
+coverage/
+test-results/
+playwright-report/
+.pytest_cache/
+
+# Docker
+*.log
+neo4j-data/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Secrets
+.env
+.env.local
+.env.*.local
+credentials.json
+*.pem
+*.key

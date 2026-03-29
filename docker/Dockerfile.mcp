@@ -1,0 +1,45 @@
+# =============================================================================
+# P&ID Inteligente — MCP Server (TypeScript)
+# Multi-stage: Node 20 builds, Node 20-alpine runs with prod deps only.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Stage 1: Builder — install all deps and compile TypeScript
+# ---------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY packages/pid-mcp-server/package.json packages/pid-mcp-server/package-lock.json* ./
+RUN npm ci --ignore-scripts
+
+COPY packages/pid-mcp-server/ .
+RUN npm run build
+
+# ---------------------------------------------------------------------------
+# Stage 2: Production deps — install only what's needed at runtime
+# ---------------------------------------------------------------------------
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+COPY packages/pid-mcp-server/package.json packages/pid-mcp-server/package-lock.json* ./
+RUN npm ci --ignore-scripts --omit=dev
+
+# ---------------------------------------------------------------------------
+# Stage 3: Runtime — lean alpine image
+# ---------------------------------------------------------------------------
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Non-root user for security
+RUN addgroup -g 1000 appuser && adduser -u 1000 -G appuser -s /bin/sh -D appuser
+
+COPY --from=deps    /app/node_modules ./node_modules
+COPY --from=builder /app/dist         ./dist
+COPY --from=builder /app/package.json .
+
+USER appuser
+
+CMD ["node", "dist/index.js"]

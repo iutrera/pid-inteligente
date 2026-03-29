@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pid-converter"
+version = "0.1.0"
+description = "Bidirectional converter between Draw.io (mxGraph XML) and DEXPI Proteus XML for P&ID diagrams"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "lxml>=5.0",
+    "pydantic>=2.0",
+    "pydexpi>=1.0",
+    "networkx>=3.0",
+    "typer>=0.9",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+pid-converter = "pid_converter.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pid_converter"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+extend = "../../ruff.toml"

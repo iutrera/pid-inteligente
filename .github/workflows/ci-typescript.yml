@@ -1,0 +1,46 @@
+name: CI TypeScript
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-build-test:
+    name: Lint, Build & Test (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["20"]
+        package:
+          - pid-web
+          - pid-mcp-server
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: packages/${{ matrix.package }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: packages/${{ matrix.package }}
+        run: npm install
+
+      - name: Run ESLint
+        working-directory: packages/${{ matrix.package }}
+        run: npm run lint
+
+      - name: Build
+        working-directory: packages/${{ matrix.package }}
+        run: npm run build
+
+      - name: Run tests
+        working-directory: packages/${{ matrix.package }}
+        run: npm test
